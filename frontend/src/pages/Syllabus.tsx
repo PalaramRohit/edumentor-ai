@@ -20,7 +20,7 @@ const Syllabus = () => {
         try {
             // Note: api.ts might need processSyllabus update if not present
             // But we can add it or assume standard fetch for now if missing
-            const res = await fetch(`http://127.0.0.1:5000/syllabus/process`, {
+            const res = await fetch(`/syllabus/process`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ user_id: user.id, text })

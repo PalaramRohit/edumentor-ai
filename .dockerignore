@@ -1,0 +1,10 @@
+# Exclude local dev files from the Docker build context
+**/node_modules
+**/__pycache__
+**/*.pyc
+**/.env
+**/venv
+**/.git
+**/.vscode
+frontend/dist
+backend/static

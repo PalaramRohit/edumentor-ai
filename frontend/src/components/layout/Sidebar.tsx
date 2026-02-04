@@ -1,10 +1,12 @@
 import { NavLink } from 'react-router-dom';
 import { Home, Map, FileText, BarChart3, User, History, LogOut, Rocket, Mic, MessageSquare } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
+import { useAuth } from '../../context/AuthContext';
 
 
 const Sidebar = () => {
   const { t } = useLanguage();
+  const { logout } = useAuth();
 
   const navItems = [
     { icon: <Home size={20} />, label: t('dashboard'), path: '/' },
@@ -48,7 +50,10 @@ const Sidebar = () => {
 
 
       {/* Logout */}
-      <div className="sidebar-item text-muted-foreground hover:text-foreground">
+      <div
+        className="sidebar-item text-muted-foreground hover:text-foreground cursor-pointer"
+        onClick={logout}
+      >
         <LogOut size={20} />
         <span className="font-medium">Log Out</span>
       </div>
