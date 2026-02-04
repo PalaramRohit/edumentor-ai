@@ -1,0 +1,16 @@
+{
+  "REST_API": ["rest api", "restful services", "restful", "api integration", "rest api development", "restful api"],
+  "SQL": ["sql", "relational database", "mysql", "postgresql", "postgres", "mariadb"],
+  "NOSQL": ["nosql", "mongodb", "mongo", "cassandra"],
+  "CLOUD": ["aws", "azure", "gcp", "cloud services", "cloud"],
+  "PYTHON": ["python", "py"],
+  "TENSORFLOW": ["tensorflow", "tf"],
+  "PYTORCH": ["pytorch", "torch"],
+  "REACT": ["react", "reactjs", "react.js"],
+  "FLASK": ["flask", "flask framework"],
+  "DJANGO": ["django"],
+  "DOCKER": ["docker", "container"],
+  "KUBERNETES": ["kubernetes", "k8s"],
+  "SCIKIT_LEARN": ["scikit-learn", "sklearn"],
+  "REST_API_GENERIC": ["api", "api development", "api design"]
+}

@@ -1,0 +1,96 @@
+# EduMentor AI - Technical Working Mechanism
+**Version:** 1.0
+**Date:** 2026-02-03
+**Module:** Backend Architecture & ML Core
+
+---
+
+## 1. Introduction
+This document details the internal working mechanisms of EduMentor AI, specifically focusing on the Machine Learning (ML) pipelines, mathematical formulas, and the Logic Flow used to perform Skill Gap Analysis and Roadmap Generation.
+
+---
+
+## 2. Machine Learning Core (`ml_core.py`)
+The heart of the analysis engine is a hybrid NLP system that combines **Statistical Vectorization** with **Rule-Based Heuristics**.
+
+### 2.1 The Problem
+We need to compare a student's unstructured syllabus (e.g., "I learned Python and Arrays") against structured Job Profiles (e.g., "Requires: Python, Django, Docker").
+
+### 2.2 Algorithm: TF-IDF Vectorization
+To create a mathematical representation of text, we use **Term Frequency-Inverse Document Frequency (TF-IDF)**.
+
+**Formula:**
+$$ W_{t,d} = TF_{t,d} \times \log(\frac{N}{DF_t}) $$
+
+Where:
+-   $TF_{t,d}$: How often term $t$ appears in document $d$.
+-   $N$: Total number of documents.
+-   $DF_t$: Number of documents containing term $t$.
+
+**Implementation:**
+We use `sklearn.feature_extraction.text.TfidfVectorizer`.
+1.  **Corpus Creation**: We combine the Student's Syllabus string with the list of required Job Skills.
+2.  **Vectorization**: This converts the text into a sparse matrix of floating-point numbers. Distinct terms (like "Python") get unique dimensions in this vector space.
+
+### 2.3 Algorithm: Cosine Similarity
+To measure how "close" the student's skills are to the job requirements, we compute the angle between their vectors.
+
+**Formula:**
+$$ \text{similarity} = \cos(\theta) = \frac{A \cdot B}{||A|| \times ||B||} $$
+
+Where:
+-   $A$: The Student's Skill Vector.
+-   $B$: The Specific Job Skill Vector (e.g., "Docker").
+-   $A \cdot B$: Dot product of the vectors.
+-   $||A||$: Magnitude (length) of vector A.
+
+**Result**: A number between 0.0 (No match) and 1.0 (Perfect match).
+
+### 2.4 The Hybrid Scoring Model (Custom Logic)
+Pure TF-IDF can fail on short text (e.g., "js" vs "javascript"). To fix this, we use a **Hybrid Weighted Score**.
+
+**Formula:**
+$$ \text{FinalScore} = (0.6 \times \text{Similarity}) + (0.4 \times \text{Exposure}) $$
+
+-   **Similarity ($0.6$)**: The Semantic match calculated via TF-IDF/Cosine.
+-   **Exposure ($0.4$)**: A binary score (1.0 or 0.0). It is 1.0 ONLY if the exact skill string is found in the student's syllabus list.
+
+**Why this works**:
+-   If you Mention "coding", you might get a 0.3 Similarity to "Python".
+-   But if you explicitly write "Python", you get +0.4 Exposure boost.
+-   This balances "vague conceptual knowledge" vs "explicit keyword matches".
+
+### 2.5 Readiness Calculation
+The overall "Readiness Score" for a role is the weighted average of all skill scores.
+
+$$ \text{Readiness} (\%) = \left( \frac{\sum (\text{FinalScore}_i \times \text{Weight}_i)}{\sum \text{Weight}_i} \right) \times 100 $$
+
+---
+
+## 3. Large Language Model (LLM) Integration
+We use the **Cerebras Inference API** (Llama-3.1-8b-instant) for generative tasks.
+
+### 3.1 Prompt Engineering Mechanism
+We do not just "ask" the AI. We encase user requests in strictly typed "System Prompts".
+
+#### Architecture:
+1.  **System Role**: "You are an academic mentor. Output strictly valid JSON."
+2.  **Constraints**: We explicitly forbid Markdown, explanations, or trailing commas to ensure the output is machine-readable.
+3.  **Fallback Mechanism**: If the AI returns invalid JSON, the backend catches the `JSONDecodeError` and returns a pre-calculated "Safe Mode" roadmap to prevent the app from crashing.
+
+### 3.2 Roadmap Generation
+-   **Input**: List of Missing Skills (e.g., `['Docker', 'Kubernetes']`).
+-   **Process**: The Prompt forces the AI to break these down into an 8-week schedule.
+-   **Output**: A parsed JSON object used directly by the Frontend React components to render the timeline cards.
+
+---
+
+## 4. Backend-Frontend Data Flow
+
+### 4.1 The "Request-Response" Cycle
+1.  **User Action**: User clicks "Analyze".
+2.  **API Call**: Frontend sends `POST /analysis/run` with `{ user_id: "...", target_role: "Backend Dev" }`.
+3.  **Database Lookup**: Backend fetches `Syllabus` (User Data) and `Jobs` (Market Data) from MongoDB.
+4.  **Computation**: `MLCore` runs the vectors and matrix math (approx. 50ms).
+5.  **Storage**: The result is saved to the `analysis` collection for history.
+6.  **Response**: JSON data flows back to React, which updates the `ReadinessGauge` and `SkillCard` components.
